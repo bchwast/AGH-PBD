@@ -45,6 +45,7 @@ INNER JOIN juvenile ON member.member_no = juvenile.member_no
 
 SELECT title FROM title
 INNER JOIN loan ON title.title_no = loan.title_no
+GROUP BY title
 
 
 
@@ -52,9 +53,10 @@ INNER JOIN loan ON title.title_no = loan.title_no
 Teh King’. Interesuje nas data oddania książki, ile dni była przetrzymywana i jaką
 zapłacono karę */
 
-SELECT in_date, DAY(in_date-due_date), fine_paid FROM loanhist
+USE library
+SELECT in_date, DAY(in_date - due_date), fine_paid, fine_assessed FROM loanhist
 INNER JOIN title ON loanhist.title_no = title.title_no
-WHERE title.title = 'Tao Teh King'
+WHERE title.title = 'Tao Teh King' AND in_date > due_date
 
 
 
@@ -84,6 +86,7 @@ WHERE (UnitPrice BETWEEN 20 AND 30) AND Categories.CategoryName = 'Meat/Poultry'
 /* Wybierz nazwy i ceny produktów z kategorii ‘Confections’ dla każdego produktu
 podaj nazwę dostawcy. */
 
+USE Northwind
 SELECT ProductName, UnitPrice, Suppliers.CompanyName FROM Products
 INNER JOIN Categories ON Products.CategoryID = Categories.CategoryID
 INNER JOIN Suppliers ON Products.SupplierID = Suppliers.SupplierID
@@ -94,6 +97,7 @@ WHERE Categories.CategoryName = 'Confections'
 /* Wybierz nazwy i numery telefonów klientów , którym w 1997 roku przesyłki
 dostarczała firma ‘United Package’ */
 
+USE Northwind
 SELECT Customers.CompanyName, Customers.Phone FROM Orders
 INNER JOIN Customers ON Orders.CustomerID = Customers.CustomerID
 INNER JOIN Shippers ON Orders.ShipVia = Shippers.ShipperID
@@ -104,7 +108,8 @@ WHERE YEAR(Orders.ShippedDate) = 1997 AND Shippers.CompanyName = 'United Package
 /* Wybierz nazwy i numery telefonów klientów, którzy kupowali produkty z kategorii
 ‘Confections’ */
 
-SELECT CompanyName, Phone FROM Customers
+USE Northwind
+SELECT DISTINCT CompanyName, Phone FROM Customers
 INNER JOIN Orders ON Customers.CustomerID = Orders.CustomerID
 INNER JOIN [Order Details] ON Orders.OrderID = [Order Details].OrderID
 INNER JOIN Products ON [Order Details].ProductID = Products.ProductID
@@ -128,7 +133,9 @@ INNER JOIN adult ON juvenile.adult_member_no = adult.member_no
 library). Interesuje nas imię, nazwisko, data urodzenia dziecka, adres
 zamieszkania dziecka oraz imię i nazwisko rodzica. */
 
-SELECT a.firstname, a.lastname, juvenile.birth_date, adult.city, adult.street, b.firstname, b.lastname FROM member AS a
+USE library
+SELECT a.firstname as 'child.firstname', a.lastname as 'child.lastname', juvenile.birth_date, adult.city,
+adult.street, b.firstname as 'parent.firstname', b.lastname as 'parent.lastname' FROM member AS a
 INNER JOIN juvenile ON a.member_no = juvenile.member_no
 INNER JOIN adult ON juvenile.adult_member_no = adult.member_no
 INNER JOIN member AS b ON adult.member_no = b.member_no
@@ -139,7 +146,8 @@ INNER JOIN member AS b ON adult.member_no = b.member_no
 northwind) */
 
 USE Northwind
-SELECT a.FirstName, a.LastName, a.EmployeeID, b.FirstName, b.LastName, b.EmployeeID FROM Employees as a
+SELECT a.FirstName as 'emp.fname', a.LastName as 'emp.lname', a.EmployeeID, 
+b.FirstName as 'boss.fname', b.LastName as 'boss.lname', b.EmployeeID FROM Employees as a
 LEFT OUTER JOIN Employees as b ON a.ReportsTo = b.EmployeeID
 
 
@@ -209,11 +217,12 @@ WHERE member.member_no IN (250, 342, 1675)
 /* Podaj listę członków biblioteki mieszkających w Arizonie (AZ) mają więcej niż
 dwoje dzieci zapisanych do biblioteki */
 
-SELECT member.member_no FROM member
+USE library
+SELECT firstname, lastname, COUNT(*) FROM member
 INNER JOIN adult ON member.member_no = adult.member_no
 INNER JOIN juvenile ON adult.member_no = juvenile.adult_member_no
 WHERE adult.state = 'AZ'
-GROUP BY member.member_no
+GROUP BY member.member_no, firstname, lastname
 HAVING COUNT(*) > 2
 
 
@@ -222,19 +231,21 @@ HAVING COUNT(*) > 2
 niż dwoje dzieci zapisanych do biblioteki oraz takich którzy mieszkają w Kaliforni
 (CA) i mają więcej niż troje dzieci zapisanych do biblioteki */
 
-SELECT member.member_no FROM member
+USE library
+SELECT firstname, lastname, COUNT(*) FROM member
 INNER JOIN adult ON member.member_no = adult.member_no
 INNER JOIN juvenile ON adult.member_no = juvenile.adult_member_no
 WHERE adult.state = 'AZ'
-GROUP BY member.member_no
+GROUP BY member.member_no, firstname, lastname
 HAVING COUNT(*) > 2
 UNION
-SELECT member.member_no FROM member
+SELECT firstname, lastname, COUNT(*) FROM member
 INNER JOIN adult ON member.member_no = adult.member_no
 INNER JOIN juvenile ON adult.member_no = juvenile.adult_member_no
 WHERE adult.state = 'CA'
-GROUP BY member.member_no
+GROUP BY member.member_no, firstname, lastname
 HAVING COUNT(*) > 3
+
 
 
 USE joindb
